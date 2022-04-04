@@ -948,7 +948,7 @@ namespace DSharpPlus.Net
         #endregion
 
         #region Channel
-        internal async Task<DiscordChannel> CreateGuildChannelAsync(ulong guild_id, string name, ChannelType type, ulong? parent, Optional<string> topic, int? bitrate, int? user_limit, IEnumerable<DiscordOverwriteBuilder> overwrites, bool? nsfw, Optional<int?> perUserRateLimit, VideoQualityMode? qualityMode, string reason)
+        internal async Task<DiscordChannel> CreateGuildChannelAsync(ulong guild_id, string name, ChannelType type, ulong? parent, Optional<string> topic, int? bitrate, int? user_limit, IEnumerable<DiscordOverwriteBuilder> overwrites, bool? nsfw, Optional<int?> perUserRateLimit, VideoQualityMode? qualityMode, int? position, string reason)
         {
             var restoverwrites = new List<DiscordRestOverwrite>();
             if (overwrites != null)
@@ -966,7 +966,8 @@ namespace DSharpPlus.Net
                 PermissionOverwrites = restoverwrites,
                 Nsfw = nsfw,
                 PerUserRateLimit = perUserRateLimit,
-                QualityMode = qualityMode
+                QualityMode = qualityMode,
+                Position = position
             };
 
             var headers = Utilities.GetBaseHeaders();
@@ -1439,7 +1440,7 @@ namespace DSharpPlus.Net
             return ret;
         }
 
-        internal async Task<DiscordMessage> EditMessageAsync(ulong channel_id, ulong message_id, Optional<string> content, Optional<IEnumerable<DiscordEmbed>> embeds, IEnumerable<IMention> mentions, IReadOnlyList<DiscordActionRowComponent> components, IReadOnlyCollection<DiscordMessageFile> files, MessageFlags? flags, IEnumerable<DiscordAttachment> attachments)
+        internal async Task<DiscordMessage> EditMessageAsync(ulong channel_id, ulong message_id, Optional<string> content, Optional<IEnumerable<DiscordEmbed>> embeds, Optional<IEnumerable<IMention>> mentions, IReadOnlyList<DiscordActionRowComponent> components, IReadOnlyCollection<DiscordMessageFile> files, MessageFlags? flags, IEnumerable<DiscordAttachment> attachments)
         {
             if (embeds.HasValue && embeds.Value != null)
                 foreach (var embed in embeds.Value)
@@ -1457,7 +1458,7 @@ namespace DSharpPlus.Net
                 Attachments = attachments
             };
 
-            pld.Mentions = new DiscordMentions(mentions ?? Mentions.None, false, mentions?.OfType<RepliedUserMention>().Any() ?? false);
+            pld.Mentions = mentions.HasValue ? new DiscordMentions(mentions.Value ?? Mentions.None, false, mentions.Value?.OfType<RepliedUserMention>().Any() ?? false) : null;
 
             var values = new Dictionary<string, string>
             {
@@ -3135,7 +3136,9 @@ namespace DSharpPlus.Net
                     Name = command.Name,
                     Description = command.Description,
                     Options = command.Options,
-                    DefaultPermission = command.DefaultPermission
+                    DefaultPermission = command.DefaultPermission,
+                    NameLocalizations = command.NameLocalizations,
+                    DescriptionLocalizations = command.DescriptionLocalizations
                 });
             }
 
@@ -3159,7 +3162,9 @@ namespace DSharpPlus.Net
                 Name = command.Name,
                 Description = command.Description,
                 Options = command.Options,
-                DefaultPermission = command.DefaultPermission
+                DefaultPermission = command.DefaultPermission,
+                NameLocalizations = command.NameLocalizations,
+                DescriptionLocalizations = command.DescriptionLocalizations
             };
 
             var route = $"{Endpoints.APPLICATIONS}/:application_id{Endpoints.COMMANDS}";
@@ -3188,14 +3193,16 @@ namespace DSharpPlus.Net
             return ret;
         }
 
-        internal async Task<DiscordApplicationCommand> EditGlobalApplicationCommandAsync(ulong application_id, ulong command_id, Optional<string> name, Optional<string> description, Optional<IReadOnlyCollection<DiscordApplicationCommandOption>> options, Optional<bool?> defaultPermission)
+        internal async Task<DiscordApplicationCommand> EditGlobalApplicationCommandAsync(ulong application_id, ulong command_id, Optional<string> name, Optional<string> description, Optional<IReadOnlyCollection<DiscordApplicationCommandOption>> options, Optional<bool?> defaultPermission, IReadOnlyDictionary<string, string> name_localizations = null, IReadOnlyDictionary<string, string> description_localizations = null)
         {
             var pld = new RestApplicationCommandEditPayload
             {
                 Name = name,
                 Description = description,
                 Options = options,
-                DefaultPermission = defaultPermission
+                DefaultPermission = defaultPermission,
+                NameLocalizations = name_localizations,
+                DescriptionLocalizations = description_localizations
             };
 
             var route = $"{Endpoints.APPLICATIONS}/:application_id{Endpoints.COMMANDS}/:command_id";
@@ -3244,7 +3251,9 @@ namespace DSharpPlus.Net
                     Name = command.Name,
                     Description = command.Description,
                     Options = command.Options,
-                    DefaultPermission = command.DefaultPermission
+                    DefaultPermission = command.DefaultPermission,
+                    NameLocalizations = command.NameLocalizations,
+                    DescriptionLocalizations = command.DescriptionLocalizations
                 });
             }
 
@@ -3268,7 +3277,9 @@ namespace DSharpPlus.Net
                 Name = command.Name,
                 Description = command.Description,
                 Options = command.Options,
-                DefaultPermission = command.DefaultPermission
+                DefaultPermission = command.DefaultPermission,
+                NameLocalizations = command.NameLocalizations,
+                DescriptionLocalizations = command.DescriptionLocalizations
             };
 
             var route = $"{Endpoints.APPLICATIONS}/:application_id{Endpoints.GUILDS}/:guild_id{Endpoints.COMMANDS}";
@@ -3297,14 +3308,16 @@ namespace DSharpPlus.Net
             return ret;
         }
 
-        internal async Task<DiscordApplicationCommand> EditGuildApplicationCommandAsync(ulong application_id, ulong guild_id, ulong command_id, Optional<string> name, Optional<string> description, Optional<IReadOnlyCollection<DiscordApplicationCommandOption>> options, Optional<bool?> defaultPermission)
+        internal async Task<DiscordApplicationCommand> EditGuildApplicationCommandAsync(ulong application_id, ulong guild_id, ulong command_id, Optional<string> name, Optional<string> description, Optional<IReadOnlyCollection<DiscordApplicationCommandOption>> options, Optional<bool?> defaultPermission, IReadOnlyDictionary<string, string> name_localizations = null, IReadOnlyDictionary<string, string> description_localizations = null)
         {
             var pld = new RestApplicationCommandEditPayload
             {
                 Name = name,
                 Description = description,
                 Options = options,
-                DefaultPermission = defaultPermission
+                DefaultPermission = defaultPermission,
+                NameLocalizations = name_localizations,
+                DescriptionLocalizations = description_localizations
             };
 
             var route = $"{Endpoints.APPLICATIONS}/:application_id{Endpoints.GUILDS}/:guild_id{Endpoints.COMMANDS}/:command_id";

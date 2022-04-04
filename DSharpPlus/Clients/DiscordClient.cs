@@ -401,15 +401,9 @@ namespace DSharpPlus
                 return usr;
 
             usr = await this.ApiClient.GetUserAsync(userId).ConfigureAwait(false);
-            usr = this.UserCache.AddOrUpdate(userId, usr, (id, old) =>
-            {
-                old.Username = usr.Username;
-                old.Discriminator = usr.Discriminator;
-                old.AvatarHash = usr.AvatarHash;
-                old.BannerHash = usr.BannerHash;
-                old._bannerColor = usr._bannerColor;
-                return old;
-            });
+
+            // See BaseDiscordClient.UpdateUser for why this is done like this.
+            this.UserCache.AddOrUpdate(userId, usr, (_, _) => usr);
 
             return usr;
         }
@@ -556,10 +550,10 @@ namespace DSharpPlus
         /// <exception cref="Exceptions.ServerErrorException">Thrown when Discord is unable to process the request.</exception>
         public async Task<DiscordGuild> GetGuildAsync(ulong id, bool? withCounts = null)
         {
-            //if (this._guilds.TryGetValue(id, out var guild) && (!withCounts.HasValue || !withCounts.Value))
-            //    return guild;
+            if (this._guilds.TryGetValue(id, out var guild) && (!withCounts.HasValue || !withCounts.Value))
+                return guild;
 
-            DiscordGuild guild = await this.ApiClient.GetGuildAsync(id, withCounts).ConfigureAwait(false);
+            guild = await this.ApiClient.GetGuildAsync(id, withCounts).ConfigureAwait(false);
             var channels = await this.ApiClient.GetGuildChannelsAsync(guild.Id).ConfigureAwait(false);
             foreach (var channel in channels) guild._channels[channel.Id] = channel;
 
