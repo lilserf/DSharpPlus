@@ -3,20 +3,19 @@
     {
       "src": [
         {
-          "src": "..",
-          "files": [
-            "**.cs"
-          ],
+          "src": "../",
+          "files": "**.sln",
           "exclude": [
             "**/obj/**",
-            "**/bin/**",
             "_site/**"
           ]
         }
       ],
       "dest": "api",
-      "filter": "filter_config.yml"
-    }
+      "filter": "filter_config.yml",
+      "memberLayout": "separatePages"
+    } 
+
   ],
   "build": {
     "content": [
@@ -66,19 +65,23 @@
     ],
     "dest": "_site",
     "globalMetadata": {
-      "_appTitle": "DSharpPlus documentation",
-      "_appFooter": "© 2016-2021 DSharpPlus Contributors",
+      "_appTitle": "DSharpPlus",
+      "_appName": "DSharpPlus",
+      "_appFooter": "© 2016-2024 DSharpPlus Contributors",
+      "_appLogoPath": "images/logo.png",
+      "_appFaviconPath": "images/favicon.ico",
       "_enableSearch": "true"
     },
-    "xrefService": [
-      "https://xref.docs.microsoft.com/query?uid={uid}"
-    ],
     "globalMetadataFiles": [],
     "fileMetadataFiles": [],
     "template": [
-      "dsplus"
+      "default",
+      "modern",
+      "memberpage"
     ],
-    "postProcessors": ["ExtractSearchIndex", "CustomMemberIndexer"],
+    "postProcessors": [
+      "ExtractSearchIndex"
+    ],
     "noLangKeyword": false,
     "keepFileLink": false,
     "cleanupCacheHistory": false

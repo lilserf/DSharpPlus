@@ -4,25 +4,27 @@ title: DSharpPlus Events
 ---
 
 # Consuming Events
-DSharpPlus makes use of *asynchronous events* which will execute each handler asynchronously in sequential order. This
+
+DSharpPlus makes use of *asynchronous events* which will execute each handler asynchronously and in parallel. This
 event system will require event handlers have a `Task` return type and take two parameters.
 
 The first parameter will contain an instance of the object which fired the event. The second parameter will contain an
 arguments object for the specific event you're handling.
 
 Below is a snippet demonstrating this with a lambda expression.
+
 ```cs
-private async Task MainAsync()
+private async Task Main(string[] args)
 {
     var discord = new DiscordClient();
-	
+
     discord.MessageCreated += async (s, e) =>
     {
-        if (e.Message.Content.ToLower().Contains("spiderman")) 
+        if (e.Message.Content.ToLower().Contains("spiderman"))
             await e.Message.RespondAsync("I want pictures of Spiderman!");
     };
-	
-	discord.GuildMemberAdded += (s, e) =>
+
+    discord.GuildMemberAdded += (s, e) =>
     {
         // Non asynchronous code here.
         return Task.CompletedTask;
@@ -31,13 +33,14 @@ private async Task MainAsync()
 ```
 
 Alternatively, you can create a new method to consume an event.
+
 ```cs
-private async Task MainAsync()
+private async Task Main(string[] args)
 {
     var discord = new DiscordClient();
-	
+
     discord.MessageCreated += MessageCreatedHandler;
-	discord.GuildMemberAdded += MemberAddedHandler;
+    discord.GuildMemberAdded += MemberAddedHandler;
 }
 
 private async Task MessageCreatedHandler(DiscordClient s, MessageCreateEventArgs e)
@@ -53,34 +56,30 @@ private Task MemberAddedHandler(DiscordClient s, GuildMemberAddEventArgs e)
 }
 ```
 
-# Avoiding Deadlocks
-Despite the fact that your event handlers are executed asynchronously, they are also executed one at a time on the
-gateway thread for consistency. This means that each handler must complete its execution before others can be
-dispatched. 
+You should only register or unregister events on startup or on deterministic points in execution: do not change
+event handlers based on user input, in commands or anything related unless you have a very good reason.
 
-Because of this, executing code in your event handlers that runs for an extended period of time may inadvertently create
-brief unresponsiveness or, even worse, cause a [deadlock][0]. To prevent such issues, any event handler that has the
-potential to take more than 2 seconds to execute should have its logic offloaded to a `Task.Run`.
-```cs
-discord.MessageCreated += (s, e) =>
-{
-    _ = Task.Run(async () =>
-    {
-        // Pretend this takes many, many seconds to execute.
-        var response = await QuerySlowWebServiceAsync(e.Message.Content);
+## Usage of the right events
 
-        if (response.Status == HttpStatusCode.OK)
-		{
-			await e.Guild?.BanMemberAsync((DiscordMember)e.Author);
-        }
-    });
+ We advise against the use of the `Ready` event in the `DiscordClient`, as it does not necessarily mean that the client
+ is ready. If the goal is to obtain  `DiscordMember`/`DiscordGuild` information, this event should not be used. Instead,
+ the `GuildDownloadCompleted` event should be used. The `Ready` event is only meant to signal that the client has
+ finished the initial handshake with the gateway and is prepared to begin sending payloads.
 
-	return Task.CompletedTask;
-};
-```
+ ## Migrating to parallel events
 
-Doing this will allow the handler to complete its execution quicker, which will in turn allow other handlers to be
-executed and prevent the gateway thread from being blocked.
+ In D#+ v4.4.0, events were changed from executing sequentially (each event runs its registered handlers one by one) to
+ executing in parallel (each event throws all its handlers onto the thread pool). This change has a few benefits, from
+ mitigating deadlocks previously occurring with certain interactivity-commandsnext interactions to allowing EventArgs
+ objets to be garbage collected sooner.
 
-<!-- LINKS -->
-[0]:  https://en.wikipedia.org/wiki/Deadlock
+ For end users, this change should not cause any problems, **unless:**
+
+ - **IF** you previously had an event handler for `ComponentInteractionCreated` that indiscriminately responded to all
+    interactions while also using button interactivity, your code will break. Make sure you only respond to events you
+    actually handle.
+ - **IF** you previously had two different event handlers on the same event relying on one completing before the other,
+    your code will break. Either register only one event handler dealing with all your logic, or manage state yourself.
+
+This change also means that there is no longer a timeout on event handlers, and your event handler is free to take however
+long it needs to. There is no longer a reason to wrap your events in a `_ = Task.Run(async () => // logic);`.

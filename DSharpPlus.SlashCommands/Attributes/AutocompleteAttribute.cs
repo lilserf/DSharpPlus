@@ -1,7 +1,7 @@
-﻿// This file is part of the DSharpPlus project.
+// This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2024 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,26 +23,22 @@
 
 using System;
 
-namespace DSharpPlus.SlashCommands
+namespace DSharpPlus.SlashCommands;
+
+/// <summary>
+/// Handles autocomplete choices for a slash command parameter.
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
+public class AutocompleteAttribute : Attribute
 {
+    /// <summary>
+    /// The provider for this autocomplete parameter.
+    /// </summary>
+    public Type Provider { get; }
+
     /// <summary>
     /// Handles autocomplete choices for a slash command parameter.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
-    public class AutocompleteAttribute : Attribute
-    {
-        /// <summary>
-        /// The provider for this autocomplete parameter.
-        /// </summary>
-        public Type Provider { get; }
-
-        /// <summary>
-        /// Handles autocomplete choices for a slash command parameter.
-        /// </summary>
-        /// <param name="provider">The type of the autcomplete provider. This should inherit from <see cref="IAutocompleteProvider"/>.</param>
-        public AutocompleteAttribute(Type provider)
-        {
-            this.Provider = provider;
-        }
-    }
+    /// <param name="provider">The type of the autocomplete provider. This should inherit from <see cref="IAutocompleteProvider"/>.</param>
+    public AutocompleteAttribute(Type provider) => this.Provider = provider;
 }
